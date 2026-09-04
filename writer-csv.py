@@ -8,10 +8,10 @@ from datetime import datetime
 import time
 
 conexao = mysql.connector.connect(
-    host="",
-    user="",
-    password="",
-    database=""
+    host="localhost",
+    user="root",
+    password="urubu100",
+    database="flowtech"
 )
 
 cursor = conexao.cursor(dictionary=True)
@@ -33,8 +33,32 @@ def obter_uuid_da_placa():
     else:
         return None
     
-def coletar_dados(usuario, maquina, uuid):
+def coletar_dados(usuario, maquina, uuid, id_embarcado):
     print("Programa Iniciado.")
+    
+    comando_sql = "SELECT * FROM parametros p INNER JOIN componentes c ON p.fk_componente = c.id WHERE p.fk_embarcado = %s;"
+
+    cursor.execute(comando_sql, (id_embarcado, ))
+    resultados = cursor.fetchall()
+    
+    alvo_cpu = None
+    alvo_ram = None
+    alvo_disco = None
+    alvo_rede = None
+    
+    if not resultados:
+        print("Não foram definidos parâmetros especificos... buscando o padrão.")
+        
+    
+    for i in resultados:
+        if resultados[i]["nome"] == "cpu":
+            alvo_cpu = True
+        if resultados[i]["nome"] == "ram":
+            alvo_ram = True
+        if resultados[i]["nome"] == "disco":
+            alvo_disco = True
+        if resultados[i]["nome"] == "rede":
+            alvo_rede = True
 
     print(f"Olá {usuario}, aqui estão os dados da sua máquina (aguarde 15 seg):")
 
@@ -42,24 +66,28 @@ def coletar_dados(usuario, maquina, uuid):
         csvfile.write("maquina, uuid, cpu, disco, memoria, rede, data/hora\n")
 
     for i in range(5):
-        cpu = psutil.cpu_percent(interval=1)
-        disc = psutil.disk_usage("/").percent
-        mem = psutil.virtual_memory().percent
-        net_inicio = psutil.net_io_counters()
-        time.sleep(10)
-        net_fim = psutil.net_io_counters()
-        upload_mbps = f"{(net_fim.bytes_sent - net_inicio.bytes_sent) * 8 / 1_000_000:.3f}"
+        cpu = psutil.cpu_percent(interval=1) if alvo_cpu else None
+        ram = psutil.virtual_memory().percent if alvo_ram else None
+        disco = psutil.disk_usage("/").percent if alvo_disco else None
+        if alvo_rede == True:
+            rede_inicio = psutil.net_io_counters() 
+            time.sleep(10)
+            rede_fim = psutil.net_io_counters()
+            upload_mbps = f"{(rede_fim.bytes_sent - rede_inicio.bytes_sent) * 8 / 1_000_000:.3f}"
+        else:
+            upload_mbps = None
+            
         data_hora = datetime.now().replace(microsecond=0)
 
         with open('./coleta1.csv', 'a', newline='') as csvfile:
-            csvfile.write(f"{maquina}, {uuid}, {cpu}, {disc}, {mem}, {upload_mbps}, {data_hora}\n")
+            csvfile.write(f"{maquina}, {uuid}, {cpu}, {ram}, {disco}, {upload_mbps}, {data_hora}\n")
 
         time.sleep(4)
 
-        print(f"CPU: {cpu}%")
-        print(f"Disco: {disc}%")
-        print(f"Memória: {mem}%")
-        print(f"Rede: {upload_mbps} Mbps")
+        if alvo_cpu: print(f"CPU: {cpu}%")
+        if alvo_ram: print(f"Memória: {ram}%")
+        if alvo_disco: print(f"Disco: {disco}%")
+        if alvo_rede: print(f"Rede: {upload_mbps} Mbps")
         print("Data e hora local:", data_hora)
         print("---------------------------------------------")
 
@@ -88,7 +116,7 @@ def login():
     del comando_sql
     del dados_usuario
     
-    comando_sql = "SELECT emp.id as id_empresa, p.id as id_porticos, emb.id as id_embarcados, emb.uuid, emb.status FROM empresas as emp INNER JOIN porticos as p ON emp.id = p.fk_empresa INNER JOIN embarcados as emb ON p.id = emb.fk_portico WHERE emb.uuid = %s;"
+    comando_sql = "SELECT emp.id as id_empresa, p.id as id_porticos, emb.id as id_embarcado, emb.uuid, emb.status FROM empresas as emp INNER JOIN porticos as p ON emp.id = p.fk_empresa INNER JOIN embarcados as emb ON p.id = emb.fk_portico WHERE emb.uuid = %s;"
     uuid = obter_uuid_da_placa()
     cursor.execute(comando_sql, (uuid, ))
     resultados = cursor.fetchone()
@@ -109,8 +137,11 @@ def login():
         print("Operação inválida: Máquina desativada, altere seu status na dashboard")
         return
     
+    id_embarcado = resultados["id_embarcado"]
+    del resultados
+    del comando_sql
     print("Sucesso: Iniciando a coleta de dados...")
     hostname = socket.gethostname()
-    coletar_dados(usuario, hostname, uuid)
+    coletar_dados(usuario, hostname, uuid, id_embarcado)
     
 login()
