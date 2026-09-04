@@ -7,10 +7,12 @@ import psutil
 from datetime import datetime
 import time
 
+from pathlib import Path
+
 conexao = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="urubu100",
+    host="",
+    user="",
+    password="",
     database="flowtech"
 )
 
@@ -60,12 +62,20 @@ def coletar_dados(usuario, maquina, uuid, id_embarcado):
         if item["nome"] == "rede":
             alvo_rede = True
 
+    cursor.close()
+    conexao.close()
+    del resultados
+
     print(f"Olá {usuario}, aqui estão os dados da sua máquina (aguarde 15 seg):")
 
-    with open('./coleta1.csv', 'a', newline='') as csvfile:
-        csvfile.write("maquina, uuid, cpu, disco, memoria, rede, data/hora\n")
+    data_atual = datetime.now().strftime("%Y-%m-%d")
+    nome_arquivo = f"./{maquina}_{uuid}_{data_atual}.csv"
 
-    for i in range(5):
+    if not Path(f"./{nome_arquivo}").exists():
+        with open(f'./{nome_arquivo}', 'a', newline='') as csvfile:
+            csvfile.write("maquina, uuid, cpu, disco, memoria, rede, data/hora\n")
+
+    for i in range(25):
         cpu = psutil.cpu_percent(interval=1) if alvo_cpu else None
         ram = psutil.virtual_memory().percent if alvo_ram else None
         disco = psutil.disk_usage("/").percent if alvo_disco else None
@@ -79,7 +89,7 @@ def coletar_dados(usuario, maquina, uuid, id_embarcado):
             
         data_hora = datetime.now().replace(microsecond=0)
 
-        with open('./coleta1.csv', 'a', newline='') as csvfile:
+        with open(f'./{nome_arquivo}', 'a', newline='') as csvfile:
             csvfile.write(f"{maquina}, {uuid}, {cpu}, {ram}, {disco}, {upload_mbps}, {data_hora}\n")
 
         time.sleep(4)
