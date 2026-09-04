@@ -50,14 +50,14 @@ def coletar_dados(usuario, maquina, uuid, id_embarcado):
         print("Não foram definidos parâmetros especificos... buscando o padrão.")
         
     
-    for i in resultados:
-        if resultados[i]["nome"] == "cpu":
+    for item in resultados:
+        if item["nome"] == "cpu":
             alvo_cpu = True
-        if resultados[i]["nome"] == "ram":
+        if item["nome"] == "ram":
             alvo_ram = True
-        if resultados[i]["nome"] == "disco":
+        if item["nome"] == "disco":
             alvo_disco = True
-        if resultados[i]["nome"] == "rede":
+        if item["nome"] == "rede":
             alvo_rede = True
 
     print(f"Olá {usuario}, aqui estão os dados da sua máquina (aguarde 15 seg):")
