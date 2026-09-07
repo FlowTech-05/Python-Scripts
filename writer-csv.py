@@ -10,9 +10,9 @@ import time
 from pathlib import Path
 
 conexao = mysql.connector.connect(
-    host="",
-    user="",
-    password="",
+    host="localhost",
+    user="root",
+    password="urubu100",
     database="flowtech"
 )
 
@@ -26,7 +26,7 @@ def obter_uuid_da_placa():
         return subprocess.check_output(cmd, text=True, creationflags=subprocess.CREATE_NO_WINDOW).strip()
     
     elif sistema == "linux":
-        return subprocess.check_output("cat /sys/class/dmi/id/product_uuid", shell=True, text=True).strip()
+        return subprocess.check_output("sudo cat /sys/class/dmi/id/product_uuid", shell=True, text=True).strip()
     
     elif sistema == "darwin":
         cmd = "ioreg -rd1 -c IOPlatformExpertDevice | awk -F'\"' '/IOPlatformUUID/ {print $4}'"
@@ -50,6 +50,7 @@ def coletar_dados(usuario, maquina, uuid, id_embarcado):
     
     if not resultados:
         print("Não foram definidos parâmetros especificos... buscando o padrão.")
+        alvo_cpu = alvo_ram = alvo_disco = alvo_rede = True
         
     
     for item in resultados:
