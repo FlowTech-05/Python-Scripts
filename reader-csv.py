@@ -1,11 +1,11 @@
 import pandas as pd
 
-df = pd.read_csv("dados.csv", encoding="cp1252")
+df = pd.read_csv("vizzaccaro_692F018C-6BC9-11F0-82CE-60C72739D046_2026-09-07.csv", encoding="cp1252")
 
-df["CPU"] = pd.to_numeric(df["CPU"], errors="coerce")
-df["RAM"] = pd.to_numeric(df["RAM"], errors="coerce")
-df["Disco"] = pd.to_numeric(df["Disco"], errors="coerce")
+df["cpu"] = pd.to_numeric(df["cpu"], errors="coerce")
+df["ram"] = pd.to_numeric(df["memoria"], errors="coerce")
+df["disco"] = pd.to_numeric(df["disco"], errors="coerce")
 
-medias = df.groupby("Empresa")[["CPU", "RAM", "Disco"]].mean()
+medias = df.groupby("uuid")[["cpu", "ram", "disco"]].mean()
 
 print(medias)

@@ -11,8 +11,8 @@ from pathlib import Path
 
 conexao = mysql.connector.connect(
     host="localhost",
-    user="root",
-    password="urubu100",
+    user="aluno",
+    password="sptech",
     database="flowtech"
 )
 
@@ -74,7 +74,7 @@ def coletar_dados(usuario, maquina, uuid, id_embarcado):
 
     if not Path(f"./{nome_arquivo}").exists():
         with open(f'./{nome_arquivo}', 'a', newline='') as csvfile:
-            csvfile.write("maquina, uuid, cpu, disco, memoria, rede, data/hora\n")
+            csvfile.write("maquina,uuid,cpu,disco,memoria,rede,data/hora\n")
 
     for i in range(25):
         cpu = psutil.cpu_percent(interval=1) if alvo_cpu else None
@@ -91,7 +91,7 @@ def coletar_dados(usuario, maquina, uuid, id_embarcado):
         data_hora = datetime.now().replace(microsecond=0)
 
         with open(f'./{nome_arquivo}', 'a', newline='') as csvfile:
-            csvfile.write(f"{maquina}, {uuid}, {cpu}, {ram}, {disco}, {upload_mbps}, {data_hora}\n")
+            csvfile.write(f"{maquina},{uuid},{cpu},{ram},{disco},{upload_mbps},{data_hora}\n")
 
         time.sleep(4)
 
